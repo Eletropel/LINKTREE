@@ -13,9 +13,9 @@
       "vendedores": [
         {
           "id": "v1",
-          "nome": "Vendas Geral",
-          "setor": "Atendimento",
-          "tel": "5562999999991",
+          "nome": "ATENDIMENTO GERAL",
+          "setor": "",
+          "tel": "556232379700",
           "foto": "",
           "ativo": true
         }
@@ -23,7 +23,7 @@
       "telefones": [
         {
           "id": "t1",
-          "num": "(62) 3000-0000",
+          "num": "(62) 3237-9700",
           "label": "Loja Goiânia",
           "ativo": true
         }
@@ -37,9 +37,9 @@
       "vendedores": [
         {
           "id": "v2",
-          "nome": "Vendedor Aparecida",
-          "setor": "Atendimento",
-          "tel": "5562999999993",
+          "nome": "ATENDIMENTO GERAL",
+          "setor": "",
+          "tel": "556232379710",
           "foto": "",
           "ativo": true
         }
@@ -47,7 +47,7 @@
       "telefones": [
         {
           "id": "t2",
-          "num": "(62) 3000-0001",
+          "num": "(62) 3237-9710",
           "label": "Loja Aparecida",
           "ativo": true
         }
@@ -61,9 +61,9 @@
       "vendedores": [
         {
           "id": "v3",
-          "nome": "Vendedor Catalão",
-          "setor": "Atendimento",
-          "tel": "5564999999991",
+          "nome": "ATENDIMENTO GERAL",
+          "setor": "",
+          "tel": "556420181130",
           "foto": "",
           "ativo": true
         }
@@ -71,7 +71,7 @@
       "telefones": [
         {
           "id": "t3",
-          "num": "(64) 3000-0000",
+          "num": "(64) 2018-1130",
           "label": "Loja Catalão",
           "ativo": true
         }
@@ -85,9 +85,9 @@
       "vendedores": [
         {
           "id": "v4",
-          "nome": "Vendedor LEM",
-          "setor": "Atendimento",
-          "tel": "5577999999991",
+          "nome": "ATENDIMENTO GERAL",
+          "setor": "",
+          "tel": "557736280884",
           "foto": "",
           "ativo": true
         }
@@ -95,7 +95,7 @@
       "telefones": [
         {
           "id": "t4",
-          "num": "(77) 3000-0000",
+          "num": "(77) 3628-0884",
           "label": "Loja LEM",
           "ativo": true
         }
@@ -123,8 +123,8 @@
       "id": "l3",
       "icon": "📸",
       "title": "Instagram",
-      "sub": "@eletropel",
-      "href": "https://instagram.com/eletropel",
+      "sub": "@eletropeloficial",
+      "href": "https://instagram.com/eletropeloficial",
       "ativo": true
     }
   ]
