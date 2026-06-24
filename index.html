@@ -246,9 +246,64 @@ function uid(){return Math.random().toString(36).slice(2,9);}
 function uid2(){return Math.random().toString(36).slice(2,9);}
 const DEFAULT={brand:{name:'ELETROPEL',tagline:'Distribuidora de Autopeças',logo:'logo.png'},passHash:'__pending__',unidades:[{id:uid(),nome:'Goiânia — Matriz',uf:'GO',ativo:true,vendedores:[{id:uid(),nome:'Vendas Geral',setor:'Atendimento',tel:'5562999999991',foto:'',ativo:true},{id:uid(),nome:'Vendedor 2',setor:'Peças Elétricas',tel:'5562999999992',foto:'',ativo:true}],telefones:[{id:uid(),num:'(62) 3000-0000',label:'Loja Goiânia',ativo:true}]},{id:uid(),nome:'Aparecida de Goiânia',uf:'GO',ativo:true,vendedores:[{id:uid(),nome:'Vendedor Aparecida',setor:'Atendimento',tel:'5562999999993',foto:'',ativo:true}],telefones:[{id:uid(),num:'(62) 3000-0001',label:'Loja Aparecida',ativo:true}]},{id:uid(),nome:'Catalão',uf:'GO',ativo:true,vendedores:[{id:uid(),nome:'Vendedor Catalão',setor:'Atendimento',tel:'5564999999991',foto:'',ativo:true}],telefones:[{id:uid(),num:'(64) 3000-0000',label:'Loja Catalão',ativo:true}]},{id:uid(),nome:'Luís Eduardo Magalhães',uf:'BA',ativo:true,vendedores:[{id:uid(),nome:'Vendedor LEM',setor:'Atendimento',tel:'5577999999991',foto:'',ativo:true}],telefones:[{id:uid(),num:'(77) 3000-0000',label:'Loja LEM',ativo:true}]}],links:[{id:uid(),icon:'📍',title:'Nossa Localização',sub:'Ver no Google Maps',href:'https://maps.google.com/?q=Eletropel+Goiania',ativo:true},{id:uid(),icon:'🌐',title:'Site Oficial',sub:'eletropeldistribuidora.com.br',href:'https://eletropeldistribuidora.com.br/',ativo:true},{id:uid(),icon:'📸',title:'Instagram',sub:'@eletropel',href:'https://instagram.com/eletropel',ativo:true}]};
 const KEY='eletropel_v4';
+const GH_TOKEN_KEY='eletropel_gh_token';
+const GH_REPO='Eletropel/LINKTREE';
+let _ghPushTimer=null;
 function load(){try{const r=localStorage.getItem(KEY);if(!r){const old=localStorage.getItem('eletropel_v3');if(old){const d=JSON.parse(old);const d2=JSON.parse(JSON.stringify(DEFAULT));if(d.vendedores&&d.vendedores.length)d2.unidades[0].vendedores=d.vendedores;if(d.telefones&&d.telefones.length)d2.unidades[0].telefones=d.telefones;if(d.links)d2.links=d.links;if(d.brand)d2.brand={...d2.brand,...d.brand};if(d.passHash)d2.passHash=d.passHash;return d2;}return JSON.parse(JSON.stringify(DEFAULT));}const d=JSON.parse(r);if(!d.passHash||d.passHash==='__pending__')d.passHash='__pending__';if(!d.unidades)d.unidades=[];if(!d.links)d.links=[];d.unidades.forEach(u=>{if(!u.vendedores)u.vendedores=[];if(!u.telefones)u.telefones=[];});return d;}catch{return JSON.parse(JSON.stringify(DEFAULT));}}
-function save(d){localStorage.setItem(KEY,JSON.stringify(d));}
-let D=load();let authed=false;
+function save(d){
+  localStorage.setItem(KEY,JSON.stringify(d));
+  clearTimeout(_ghPushTimer);
+  _ghPushTimer=setTimeout(pushToGitHub,1500);
+}
+let D=load();
+
+// GITHUB SYNC
+function loadGhToken(){return localStorage.getItem(GH_TOKEN_KEY)||'';}
+function saveGhToken(){
+  var t=document.getElementById('cfg-ghtoken').value.trim();
+  if(!t){toast('Informe o token.');return;}
+  localStorage.setItem(GH_TOKEN_KEY,t);
+  document.getElementById('cfg-ghtoken').value='';
+  updateTokenStatus();
+  toast('Token salvo!',false);
+}
+function updateTokenStatus(){
+  var el=document.getElementById('gh-token-status');
+  if(!el)return;
+  el.textContent=loadGhToken()?'Token configurado neste navegador.':'Nenhum token — dados so ficam neste dispositivo.';
+}
+function publicData(d){return{brand:d.brand,unidades:d.unidades,links:d.links};}
+async function syncFromGitHub(){
+  try{
+    var r=await fetch('https://eletropel.github.io/LINKTREE/data.json?t='+Date.now());
+    if(!r.ok)return;
+    var remote=await r.json();
+    if(remote.brand)D.brand=remote.brand;
+    if(remote.unidades)D.unidades=remote.unidades;
+    if(remote.links)D.links=remote.links;
+    localStorage.setItem(KEY,JSON.stringify(D));
+  }catch(e){}
+}
+async function syncNow(){
+  toast('Sincronizando...',false);
+  await syncFromGitHub();
+  renderPublic();
+  if(authed)renderAdmin();
+  toast('Dados atualizados!',false);
+}
+async function pushToGitHub(){
+  var token=loadGhToken();
+  if(!token)return;
+  try{
+    var content=btoa(unescape(encodeURIComponent(JSON.stringify(publicData(D),null,2))));
+    var metaRes=await fetch('https://api.github.com/repos/'+GH_REPO+'/contents/data.json',{headers:{Authorization:'token '+token}});
+    var body={message:'Sync: atualiza data.json',content};
+    if(metaRes.ok){var meta=await metaRes.json();body.sha=meta.sha;}
+    var res=await fetch('https://api.github.com/repos/'+GH_REPO+'/contents/data.json',{method:'PUT',headers:{Authorization:'token '+token,'Content-Type':'application/json'},body:JSON.stringify(body)});
+    if(res.ok)toast('Sincronizado!',false);
+    else toast('Erro ao sincronizar com GitHub.');
+  }catch(e){toast('Sem conexao para sincronizar.');}
+}let authed=false;
 async function doLogin(){const v=document.getElementById('login-input').value;const h=await sha256(v);if(h===D.passHash){authed=true;document.getElementById('login-overlay').style.display='none';document.getElementById('login-err').textContent='';renderAdmin();}else{document.getElementById('login-err').textContent='Senha incorreta.';document.getElementById('login-input').value='';}}
 document.getElementById('login-input').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
 function doLogout(){authed=false;document.getElementById('login-input').value='';document.getElementById('login-overlay').style.display='flex';goPublic();}
@@ -261,7 +316,7 @@ function toast(msg,ok=true){const t=document.getElementById('toast');t.textConte
 function renderPublic(){D=load();const logo=D.brand.logo||'logo.png';document.getElementById('pub-hero').innerHTML=`<div class="logo-wrap"><img src="${logo}" alt="${D.brand.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" /><span class="logo-initials" style="display:none">${D.brand.name.slice(0,3)}</span></div><div class="brand-name">${D.brand.name}</div><div class="brand-tagline">${D.brand.tagline}</div><div class="hero-divider"></div>`;const main=document.getElementById('pub-main');main.innerHTML='';const activeLinks=D.links.filter(l=>l.ativo!==false);if(activeLinks.length){main.insertAdjacentHTML('beforeend','<div class="sec-label">ACESSE</div>');activeLinks.forEach(l=>{const a=document.createElement('a');a.className='link-card';a.href=l.href;a.target='_blank';a.rel='noopener';a.tabIndex=0;a.innerHTML=`<div class="link-icon">${l.icon}</div><div class="link-text"><div class="link-title">${l.title}</div><div class="link-sub">${l.sub}</div></div><span class="link-arr">›</span>`;main.appendChild(a);});}const au=D.unidades.filter(u=>u.ativo!==false);if(au.length){main.insertAdjacentHTML('beforeend','<div class="sec-label" style="margin-top:16px">UNIDADES</div>');au.forEach(u=>{const vends=u.vendedores.filter(v=>v.ativo!==false);const tels=u.telefones.filter(t=>t.ativo!==false);const counts=[vends.length?`${vends.length} vendedor${vends.length>1?'es':''}`:'',tels.length?`${tels.length} tel${tels.length>1?'efones':'efone'}`:''].filter(Boolean).join(' · ');const vendsHTML=vends.length?`<div class="unit-badge">💬 WhatsApp</div><div class="vend-grid">${vends.map(v=>`<a class="vend-card" href="https://wa.me/55${v.tel.replace(/\D/g,'')}" target="_blank" rel="noopener" onclick="event.stopPropagation()"><div class="vend-foto">${v.foto?`<img src="${v.foto}" alt="${v.nome}" />`:'👤'}</div><div class="vend-nome">${v.nome}</div><div class="vend-setor">${v.setor}</div><div class="vend-wpp"><span class="wpp-dot"></span> WhatsApp</div></a>`).join('')}</div>`:'';const telsHTML=tels.length?`<div class="tel-list">${tels.map(t=>`<a class="tel-item" href="tel:${t.num.replace(/\D/g,'')}" onclick="event.stopPropagation()"><span style="font-size:18px">☎️</span><div style="flex:1"><div class="tel-num">${t.num}</div><div class="tel-label">${t.label}</div></div></a>`).join('')}</div>`:'';main.appendChild(buildExpandCard('📍',u.nome,u.uf+(counts?' — '+counts:''),vendsHTML+telsHTML));});}document.getElementById('pub-footer').innerHTML=`<div>${D.brand.name} © ${new Date().getFullYear()} — GOIÂNIA, GO</div><div class="admin-trigger" onclick="goAdmin()" title="Admin">⚙</div>`;}
 function buildExpandCard(icon,title,sub,innerHTML){const id='exp-'+uid();const card=document.createElement('div');card.className='link-card';card.style.cssText='flex-direction:column;align-items:stretch;';card.innerHTML=`<div style="display:flex;align-items:center;gap:14px;width:100%" onclick="toggleExpand('${id}')"><div class="link-icon">${icon}</div><div class="link-text"><div class="link-title">${title}</div><div class="link-sub">${sub}</div></div><span class="link-arr" id="arr-${id}">›</span></div><div class="expand-body" id="${id}"><div class="expand-inner">${innerHTML}</div></div>`;return card;}
 function toggleExpand(id){const body=document.getElementById(id);const arr=document.getElementById('arr-'+id);const open=body.classList.toggle('open');if(arr)arr.classList.toggle('open',open);}
-function renderAdmin(){renderUnitList();renderLinkList();document.getElementById('cfg-name').value=D.brand.name;document.getElementById('cfg-tag').value=D.brand.tagline;document.getElementById('cfg-logo').value=D.brand.logo;}
+function renderAdmin(){renderUnitList();renderLinkList();document.getElementById('cfg-name').value=D.brand.name;document.getElementById('cfg-tag').value=D.brand.tagline;document.getElementById('cfg-logo').value=D.brand.logo;updateTokenStatus();}
 function renderUnitList(){const el=document.getElementById('unit-list');el.innerHTML='';if(!D.unidades.length){el.innerHTML='<p style="color:#666680;font-size:13px;padding:8px 0">Nenhuma unidade cadastrada.</p>';return;}D.unidades.forEach(u=>{el.appendChild(buildUnitSection(u));renderVendList(u.id);renderTelList(u.id);});}
 function buildUnitSection(u){const sec=document.createElement('div');sec.className='unit-section';sec.id='usec-'+u.id;const bodyId='ubody-'+u.id;sec.innerHTML=`<div class="unit-section-hd" onclick="toggleUnitBody('${bodyId}','${u.id}')"><span style="font-size:20px">📍</span><span class="unit-name-badge">${u.nome}</span><span class="unit-uf">${u.uf}</span><div class="tog-wrap" onclick="event.stopPropagation()"><label class="tog"><input type="checkbox" ${u.ativo!==false?'checked':''} onchange="setUnitField('${u.id}','ativo',this.checked);save(D);toast(this.checked?'Unidade ativada.':'Desativada.',this.checked)" /><span class="tog-sl"></span></label></div><span class="unit-chevron" id="chev-${u.id}">›</span></div><div class="unit-section-body" id="${bodyId}"><div class="field-row" style="margin-top:14px"><div class="field"><label>Nome</label><input value="${u.nome}" onchange="setUnitField('${u.id}','nome',this.value)" /></div><div class="field" style="max-width:90px"><label>UF</label><input value="${u.uf}" maxlength="2" onchange="setUnitField('${u.id}','uf',this.value)" /></div></div><div style="display:flex;gap:8px;justify-content:flex-end;margin-bottom:6px"><button class="btn btn-danger btn-sm" onclick="removeUnidade('${u.id}')">REMOVER UNIDADE</button><button class="btn btn-green btn-sm" onclick="saveUnit('${u.id}')">SALVAR</button></div><div class="unit-sub-label">VENDEDORES</div><div id="uvf-${u.id}"></div><div class="add-form" id="avf-${u.id}" style="display:none;margin-top:8px"><div class="add-form-title">NOVO VENDEDOR</div><div class="field-row"><div class="field"><label>Nome</label><input id="nv-nome-${u.id}" placeholder="João Silva" /></div><div class="field"><label>Setor</label><input id="nv-setor-${u.id}" placeholder="Peças Elétricas" /></div></div><div class="field-row"><div class="field"><label>WhatsApp (com DDD)</label><input id="nv-tel-${u.id}" placeholder="62999990000" /></div><div class="field"><label>URL da Foto</label><input id="nv-foto-${u.id}" placeholder="https://..." /></div></div><div class="field-actions"><button class="btn btn-ghost btn-sm" onclick="toggleForm('avf-${u.id}')">CANCELAR</button><button class="btn btn-green btn-sm" onclick="addVendedor('${u.id}')">SALVAR</button></div></div><div style="margin-top:8px"><button class="btn btn-red btn-sm" onclick="toggleForm('avf-${u.id}')">+ VENDEDOR</button></div><div class="unit-sub-label" style="margin-top:18px">TELEFONES FIXOS</div><div id="utf-${u.id}"></div><div class="add-form" id="atf-${u.id}" style="display:none;margin-top:8px"><div class="add-form-title">NOVO TELEFONE</div><div class="field-row"><div class="field"><label>Número</label><input id="nt-num-${u.id}" placeholder="(62) 3000-0000" /></div><div class="field"><label>Identificação</label><input id="nt-label-${u.id}" placeholder="Loja Principal" /></div></div><div class="field-actions"><button class="btn btn-ghost btn-sm" onclick="toggleForm('atf-${u.id}')">CANCELAR</button><button class="btn btn-green btn-sm" onclick="addTelefone('${u.id}')">SALVAR</button></div></div><div style="margin-top:8px"><button class="btn btn-red btn-sm" onclick="toggleForm('atf-${u.id}')">+ TELEFONE</button></div></div>`;return sec;}
 function toggleUnitBody(bodyId,uid){const body=document.getElementById(bodyId);const chev=document.getElementById('chev-'+uid);const open=body.classList.toggle('open');if(chev)chev.classList.toggle('open',open);}
@@ -282,7 +337,7 @@ function addLink(){const icon=document.getElementById('nl-icon').value.trim()||'
 async function saveConfig(){D.brand.name=document.getElementById('cfg-name').value.trim()||D.brand.name;D.brand.tagline=document.getElementById('cfg-tag').value.trim();D.brand.logo=document.getElementById('cfg-logo').value.trim();const p1=document.getElementById('cfg-p1').value;const p2=document.getElementById('cfg-p2').value;if(p1){if(p1!==p2){toast('Senhas não coincidem.');return;}D.passHash=await sha256(p1);}save(D);document.getElementById('cfg-p1').value='';document.getElementById('cfg-p2').value='';toast('Configurações salvas!',false);}
 function setField(arr,id,field,value){const item=arr.find(x=>x.id===id);if(item)item[field]=value;}
 function removeItem(arr,id,renderFn){if(!confirm('Remover?'))return;const i=arr.findIndex(x=>x.id===id);if(i>-1)arr.splice(i,1);save(D);renderFn();toast('Removido.');}
-(async()=>{if(!D.passHash||D.passHash==='__pending__'){D.passHash=await sha256('eletropel2025');save(D);}renderPublic();})();
+(async()=>{if(!D.passHash||D.passHash==='__pending__'){D.passHash=await sha256('eletropel2025');localStorage.setItem(KEY,JSON.stringify(D));}await syncFromGitHub();renderPublic();})();
 </script>
 </body>
 </html>
