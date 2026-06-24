@@ -1,0 +1,131 @@
+{
+  "brand": {
+    "name": "ELETROPEL",
+    "tagline": "Distribuidora de Autopeças",
+    "logo": "logo.png"
+  },
+  "unidades": [
+    {
+      "id": "u1",
+      "nome": "Goiânia — Matriz",
+      "uf": "GO",
+      "ativo": true,
+      "vendedores": [
+        {
+          "id": "v1",
+          "nome": "Vendas Geral",
+          "setor": "Atendimento",
+          "tel": "5562999999991",
+          "foto": "",
+          "ativo": true
+        }
+      ],
+      "telefones": [
+        {
+          "id": "t1",
+          "num": "(62) 3000-0000",
+          "label": "Loja Goiânia",
+          "ativo": true
+        }
+      ]
+    },
+    {
+      "id": "u2",
+      "nome": "Aparecida de Goiânia",
+      "uf": "GO",
+      "ativo": true,
+      "vendedores": [
+        {
+          "id": "v2",
+          "nome": "Vendedor Aparecida",
+          "setor": "Atendimento",
+          "tel": "5562999999993",
+          "foto": "",
+          "ativo": true
+        }
+      ],
+      "telefones": [
+        {
+          "id": "t2",
+          "num": "(62) 3000-0001",
+          "label": "Loja Aparecida",
+          "ativo": true
+        }
+      ]
+    },
+    {
+      "id": "u3",
+      "nome": "Catalão",
+      "uf": "GO",
+      "ativo": true,
+      "vendedores": [
+        {
+          "id": "v3",
+          "nome": "Vendedor Catalão",
+          "setor": "Atendimento",
+          "tel": "5564999999991",
+          "foto": "",
+          "ativo": true
+        }
+      ],
+      "telefones": [
+        {
+          "id": "t3",
+          "num": "(64) 3000-0000",
+          "label": "Loja Catalão",
+          "ativo": true
+        }
+      ]
+    },
+    {
+      "id": "u4",
+      "nome": "Luís Eduardo Magalhães",
+      "uf": "BA",
+      "ativo": true,
+      "vendedores": [
+        {
+          "id": "v4",
+          "nome": "Vendedor LEM",
+          "setor": "Atendimento",
+          "tel": "5577999999991",
+          "foto": "",
+          "ativo": true
+        }
+      ],
+      "telefones": [
+        {
+          "id": "t4",
+          "num": "(77) 3000-0000",
+          "label": "Loja LEM",
+          "ativo": true
+        }
+      ]
+    }
+  ],
+  "links": [
+    {
+      "id": "l1",
+      "icon": "📍",
+      "title": "Nossa Localização",
+      "sub": "Ver no Google Maps",
+      "href": "https://maps.google.com/?q=Eletropel+Goiania",
+      "ativo": true
+    },
+    {
+      "id": "l2",
+      "icon": "🌐",
+      "title": "Site Oficial",
+      "sub": "eletropeldistribuidora.com.br",
+      "href": "https://eletropeldistribuidora.com.br/",
+      "ativo": true
+    },
+    {
+      "id": "l3",
+      "icon": "📸",
+      "title": "Instagram",
+      "sub": "@eletropel",
+      "href": "https://instagram.com/eletropel",
+      "ativo": true
+    }
+  ]
+}
